@@ -16,7 +16,7 @@ export function Header(): ReactElement {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">Sacrament Meetings</p>
           <Link href="/" className="text-2xl font-bold text-slate-900 transition hover:text-sky-700">
-            GRA Ward
+            GRA Ward, Wuse Stake
           </Link>
         </div>
         <div className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-slate-700">
