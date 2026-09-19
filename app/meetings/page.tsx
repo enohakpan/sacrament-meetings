@@ -1,25 +1,10 @@
 import type { ReactElement } from 'react';
 
 import { MeetingCard } from '@/components/MeetingCard';
-import type { SacramentMeeting } from '@/lib/types';
+import { getMeetings } from '@/lib/meetings-db';
 
-export const dynamic = 'force-dynamic';
-
-async function getMeetings(): Promise<SacramentMeeting[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-  const response = await fetch(`${baseUrl}/api/meetings`, {
-    cache: 'no-store',
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to load meetings from API.');
-  }
-
-  return (await response.json()) as SacramentMeeting[];
-}
-
-export default async function MeetingsPage(): Promise<ReactElement> {
-  const meetings = await getMeetings();
+export default function MeetingsPage(): ReactElement {
+  const meetings = getMeetings();
 
   return (
     <main>

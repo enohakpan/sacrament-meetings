@@ -3,29 +3,16 @@ import { notFound } from 'next/navigation';
 import type { ReactElement } from 'react';
 
 import { MeetingDetail } from '@/components/MeetingDetail';
-import type { SacramentMeeting } from '@/lib/types';
-
-export const dynamic = 'force-dynamic';
-
-async function getMeeting(id: string): Promise<SacramentMeeting> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-  const response = await fetch(`${baseUrl}/api/meetings/${id}`, {
-    cache: 'no-store',
-  });
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      notFound();
-    }
-    throw new Error('Failed to load the meeting detail from the API.');
-  }
-
-  return (await response.json()) as SacramentMeeting;
-}
+import { getMeetingById } from '@/lib/meetings-db';
 
 export default async function MeetingPage({ params }: { params: Promise<{ id: string }> }): Promise<ReactElement> {
   const { id } = await params;
-  const meeting = await getMeeting(id);
+  const numericId = Number(id);
+  const meeting = Number.isInteger(numericId) ? getMeetingById(numericId) : null;
+
+  if (!meeting) {
+    notFound();
+  }
 
   return (
     <main className="space-y-6">

@@ -1,7 +1,7 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 
+import { HeroSlider } from '@/components/HeroSlider';
 import { getCurrentSundayMeeting } from '@/lib/meetings-db';
 
 export default function HomePage(): ReactElement {
@@ -28,16 +28,7 @@ export default function HomePage(): ReactElement {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-          <Image
-            src="/sacrament1.jfif"
-            alt="Illustrated Sunday meeting schedule"
-            width={1200}
-            height={700}
-            priority
-            className="h-full w-full object-cover"
-          />
-        </div>
+        <HeroSlider />
       </section>
 
       <section className="mt-10 grid gap-6 md:grid-cols-3">
