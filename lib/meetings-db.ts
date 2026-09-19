@@ -1,162 +1,193 @@
-import type { SacramentMeeting } from './types';
+import { neon } from '@neondatabase/serverless';
 
-const meetings: SacramentMeeting[] = [
-  {
-    id: 1,
-    date: '2026-09-13',
-    meetingType: 'regular',
-    presiding: 'Bishop Akpoviwhroro',
-    conducting: 'Brother Enoh',
-    announcements: ['Youth conference volunteers needed by Friday', 'Temple recommend interviews on Saturday'],
-    openingHymn: { number: 2, title: 'The Spirit of God' },
-    openingPrayer: 'Sister Aniebiet',
-    wardBusiness: [
-      { description: 'Sustaining of new Relief Society president' },
-      { description: 'Thanksgiving dinner service schedule announced' },
-    ],
-    stakeBusiness: false,
-    sacramentHymn: { number: 170, title: 'God, Our Father, Hear Us Pray' },
-    speakers: [
-      { name: 'Brother Chibuzor', topic: 'The Blessings of Covenant Living', type: 'speaker' },
-      { name: 'Ward Choir', topic: '', type: 'musical-number' },
-      { name: 'Brother Harrison', topic: 'Keeping Faith Through Change', type: 'speaker' },
-    ],
-    closingHymn: { number: 31, title: 'O God, Our Help in Ages Past' },
-    closingPrayer: 'Brother Thompson',
-  },
-  {
-    id: 2,
-    date: '2026-09-06',
-    meetingType: 'testimony',
-    presiding: 'President Lewis',
-    conducting: 'Brother Hughes',
-    openingHymn: { number: 144, title: 'Faith of Our Fathers' },
-    openingPrayer: 'Brother Foster',
-    wardBusiness: [{ description: 'Fast offering donations and family history class signups' }],
-    stakeBusiness: true,
-    sacramentHymn: { number: 191, title: 'I Stand All Amazed' },
-    speakers: [
-      { name: 'Sister Clark', topic: 'Simple Acts of Service', type: 'speaker' },
-      { name: 'Brother Ramirez', topic: 'Testimony of the Savior', type: 'speaker' },
-    ],
-    closingHymn: { number: 116, title: 'Come, Come, Ye Saints' },
-    closingPrayer: 'Sister Price',
-  },
-  {
-    id: 3,
-    date: '2026-08-30',
-    meetingType: 'regular',
-    presiding: 'Bishop Akpoviwhroro',
-    conducting: 'Brother Watson',
-    announcements: ['Ward mission leader updates', 'Primary activity on Saturday'],
-    openingHymn: { number: 109, title: 'How Great Thou Art' },
-    openingPrayer: 'Brother Garcia',
-    wardBusiness: [
-      { description: 'Ward budget review and service committee assignments' },
-      { description: 'New nursery schedule shared' },
-    ],
-    stakeBusiness: false,
-    sacramentHymn: { number: 173, title: 'Where Can I Turn for Peace?' },
-    speakers: [
-      { name: 'Sister Kim', topic: 'Finding Peace in Christ', type: 'speaker' },
-      { name: 'Youth Quartet', topic: '', type: 'musical-number' },
-    ],
-    closingHymn: { number: 85, title: 'Be Still, My Soul' },
-    closingPrayer: 'Brother Patel',
-  },
-  {
-    id: 4,
-    date: '2026-08-23',
-    meetingType: 'stake',
-    presiding: 'Stake President Hill',
-    conducting: 'Brother Ross',
-    openingHymn: { number: 152, title: 'We Thank Thee, O God, for a Prophet' },
-    openingPrayer: 'Sister Reed',
-    wardBusiness: [{ description: 'Stake temple district announcement and leadership training' }],
-    stakeBusiness: true,
-    sacramentHymn: { number: 161, title: 'I Know That My Redeemer Lives' },
-    speakers: [
-      { name: 'Brother Jenkins', topic: 'Living the Gospel Daily', type: 'speaker' },
-      { name: 'Stake Choir', topic: '', type: 'musical-number' },
-      { name: 'Sister Moore', topic: 'The Joy of Ministering', type: 'speaker' },
-    ],
-    closingHymn: { number: 67, title: 'Master, the Tempest Is Raging' },
-    closingPrayer: 'Brother Diaz',
-  },
-  {
-    id: 5,
-    date: '2026-08-16',
-    meetingType: 'general',
-    presiding: 'Elder Sanders',
-    conducting: 'Brother Walker',
-    announcements: ['General conference watch party schedule', 'Missionary opportunities in the neighborhood'],
-    openingHymn: { number: 58, title: 'Guide Us, O Thou Great Jehovah' },
-    openingPrayer: 'Sister Hurst',
-    wardBusiness: [
-      { description: 'Welcome to new families in the ward' },
-      { description: 'Youth temple trip signups open' },
-    ],
-    stakeBusiness: false,
-    sacramentHymn: { number: 140, title: 'I Need Thee Every Hour' },
-    speakers: [
-      { name: 'Brother Coleman', topic: 'Trusting the Lord in Our Trials', type: 'speaker' },
-      { name: 'Sister Ortiz', topic: 'The Power of Prayer', type: 'speaker' },
-    ],
-    closingHymn: { number: 120, title: 'Praise to the Man' },
-    closingPrayer: 'Brother Morris',
-  },
-];
+import type { Hymn, MeetingType, SacramentMeeting, SpeakerItem, WardBusinessItem } from './types';
 
-export function getMeetings(date?: string | null): SacramentMeeting[] {
-  if (date) {
-    return meetings.filter((meeting) => meeting.date === date);
+export const ITEMS_PER_PAGE = 5;
+
+function getSql() {
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is not set. Provision Neon on Vercel and run `vercel env pull .env.local`.');
   }
 
-  return [...meetings];
+  return neon(connectionString);
 }
 
-export function getMeetingById(id: number): SacramentMeeting | null {
-  return meetings.find((meeting) => meeting.id === id) ?? null;
+function parseJson<T>(value: unknown, fallback: T): T {
+  if (value == null) {
+    return fallback;
+  }
+
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return fallback;
+    }
+  }
+
+  return value as T;
 }
 
-export function addMeeting(meeting: SacramentMeeting): SacramentMeeting[] {
-  meetings.push(meeting);
-  return [...meetings];
+function toIsoDate(value: unknown): string {
+  if (typeof value === 'string') {
+    return value.slice(0, 10);
+  }
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const year = value.getUTCFullYear();
+    const month = String(value.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(value.getUTCDate()).padStart(2, '0');
+    const utcDate = `${year}-${month}-${day}`;
+
+    // Neon DATE values can arrive as local midnight, which UTC conversion rolls back a day.
+    if (value.getUTCHours() !== 0) {
+      const localYear = value.getFullYear();
+      const localMonth = String(value.getMonth() + 1).padStart(2, '0');
+      const localDay = String(value.getDate()).padStart(2, '0');
+      return `${localYear}-${localMonth}-${localDay}`;
+    }
+
+    return utcDate;
+  }
+
+  return String(value).slice(0, 10);
 }
 
-export function updateMeeting(id: number, updates: Partial<SacramentMeeting>): SacramentMeeting | null {
-  const meetingIndex = meetings.findIndex((meeting) => meeting.id === id);
+function mapMeeting(row: Record<string, unknown>): SacramentMeeting {
+  return {
+    id: Number(row.id),
+    date: toIsoDate(row.iso_date ?? row.date),
+    meetingType: String(row.meeting_type) as MeetingType,
+    presiding: String(row.presiding),
+    conducting: String(row.conducting),
+    announcements: Array.isArray(row.announcements) ? (row.announcements as string[]) : [],
+    openingHymn: parseJson<Hymn>(row.opening_hymn, { number: 0, title: '' }),
+    openingPrayer: String(row.opening_prayer),
+    wardBusiness: parseJson<WardBusinessItem[]>(row.ward_business, []),
+    stakeBusiness: Boolean(row.stake_business),
+    sacramentHymn: parseJson<Hymn>(row.sacrament_hymn, { number: 0, title: '' }),
+    speakers: parseJson<SpeakerItem[]>(row.speakers, []),
+    closingHymn: parseJson<Hymn>(row.closing_hymn, { number: 0, title: '' }),
+    closingPrayer: String(row.closing_prayer),
+  };
+}
 
-  if (meetingIndex === -1) {
+function currentSundayIsoDate(): string {
+  const today = new Date();
+  const sunday = new Date(today);
+  sunday.setDate(today.getDate() - today.getDay());
+
+  const year = sunday.getFullYear();
+  const month = String(sunday.getMonth() + 1).padStart(2, '0');
+  const day = String(sunday.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+export async function getMeetings(date?: string | null): Promise<SacramentMeeting[]>;
+export async function getMeetings(
+  query: string,
+  currentPage: number,
+): Promise<{ meetings: SacramentMeeting[]; totalPages: number }>;
+export async function getMeetings(
+  dateOrQuery?: string | null,
+  currentPage?: number,
+): Promise<SacramentMeeting[] | { meetings: SacramentMeeting[]; totalPages: number }> {
+  const sql = getSql();
+
+  if (typeof currentPage === 'number') {
+    const query = dateOrQuery ?? '';
+    const search = `%${query}%`;
+    const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+    const rows = await sql`
+      SELECT *, to_char(date, 'YYYY-MM-DD') AS iso_date
+      FROM meetings
+      WHERE
+        presiding ILIKE ${search}
+        OR conducting ILIKE ${search}
+        OR meeting_type ILIKE ${search}
+        OR speakers::text ILIKE ${search}
+      ORDER BY meetings.date DESC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+    `;
+
+    const countRows = await sql`
+      SELECT COUNT(*)::int AS count
+      FROM meetings
+      WHERE
+        presiding ILIKE ${search}
+        OR conducting ILIKE ${search}
+        OR meeting_type ILIKE ${search}
+        OR speakers::text ILIKE ${search}
+    `;
+
+    const total = Number(countRows[0]?.count ?? 0);
+
+    return {
+      meetings: rows.map((row) => mapMeeting(row as Record<string, unknown>)),
+      totalPages: Math.ceil(total / ITEMS_PER_PAGE),
+    };
+  }
+
+  if (dateOrQuery) {
+    const rows = await sql`
+      SELECT *, to_char(date, 'YYYY-MM-DD') AS iso_date
+      FROM meetings
+      WHERE meetings.date = ${dateOrQuery}
+      ORDER BY meetings.date DESC
+    `;
+
+    return rows.map((row) => mapMeeting(row as Record<string, unknown>));
+  }
+
+  const rows = await sql`
+    SELECT *, to_char(date, 'YYYY-MM-DD') AS iso_date
+    FROM meetings
+    ORDER BY meetings.date DESC
+  `;
+
+  return rows.map((row) => mapMeeting(row as Record<string, unknown>));
+}
+
+export async function getMeetingById(id: number): Promise<SacramentMeeting | null> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT *, to_char(date, 'YYYY-MM-DD') AS iso_date
+    FROM meetings
+    WHERE id = ${id}
+    LIMIT 1
+  `;
+
+  if (rows.length === 0) {
     return null;
   }
 
-  meetings[meetingIndex] = {
-    ...meetings[meetingIndex],
-    ...updates,
-  };
-
-  return meetings[meetingIndex];
+  return mapMeeting(rows[0] as Record<string, unknown>);
 }
 
-export function deleteMeeting(id: number): boolean {
-  const originalLength = meetings.length;
-  const filteredMeetings = meetings.filter((meeting) => meeting.id !== id);
-
-  if (filteredMeetings.length === originalLength) {
-    return false;
-  }
-
-  meetings.splice(0, meetings.length, ...filteredMeetings);
-  return true;
+export async function addMeeting(meeting: SacramentMeeting): Promise<SacramentMeeting[]> {
+  void meeting;
+  throw new Error('addMeeting will be implemented in Week 04.');
 }
 
-export function getCurrentSundayMeeting(): SacramentMeeting | null {
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-  const sunday = new Date(today);
-  sunday.setDate(today.getDate() - dayOfWeek);
+export async function updateMeeting(
+  id: number,
+  updates: Partial<SacramentMeeting>,
+): Promise<SacramentMeeting | null> {
+  void id;
+  void updates;
+  throw new Error('updateMeeting will be implemented in Week 04.');
+}
 
-  const isoDate = sunday.toISOString().slice(0, 10);
-  return getMeetings(isoDate)[0] ?? null;
+export async function deleteMeeting(id: number): Promise<boolean> {
+  void id;
+  throw new Error('deleteMeeting will be implemented in Week 04.');
+}
+
+export async function getCurrentSundayMeeting(): Promise<SacramentMeeting | null> {
+  const meetings = await getMeetings(currentSundayIsoDate());
+  return meetings[0] ?? null;
 }

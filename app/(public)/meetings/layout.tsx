@@ -13,12 +13,16 @@ export default function MeetingsLayout({ children }: { children: ReactNode }): R
         </div>
         <NavLinks />
       </div>
-      <div className="mb-4 flex items-center gap-3 text-sm text-slate-600">
+      <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-slate-600">
         <Link href="/" className="font-medium text-sky-700 hover:text-sky-800">
           Home
         </Link>
         <span>/</span>
         <span>Meetings</span>
+        <span className="hidden sm:inline">·</span>
+        <Link href="/meetings/new" className="font-medium text-sky-700 hover:text-sky-800">
+          Create meeting
+        </Link>
       </div>
       {children}
     </div>

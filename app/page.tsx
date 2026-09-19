@@ -2,13 +2,15 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 
 import { HeroSlider } from '@/components/HeroSlider';
-import { getCurrentSundayMeeting } from '@/lib/meetings-db';
+import { getCurrentSundayMeeting, getMeetings } from '@/lib/meetings-db';
 
-export default function HomePage(): ReactElement {
-  const currentSundayMeeting = getCurrentSundayMeeting();
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage(): Promise<ReactElement> {
+  const [currentSundayMeeting, meetings] = await Promise.all([getCurrentSundayMeeting(), getMeetings()]);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
       <section className="grid items-center gap-8 overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:grid-cols-[1.15fr_0.85fr] lg:p-10">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Weekly worship</p>
@@ -34,7 +36,7 @@ export default function HomePage(): ReactElement {
       <section className="mt-10 grid gap-6 md:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">Meetings</p>
-          <h2 className="mt-3 text-3xl font-bold text-slate-900">5</h2>
+          <h2 className="mt-3 text-3xl font-bold text-slate-900">{meetings.length}</h2>
           <p className="mt-2 text-slate-600">Recent sacrament meeting records available in the archive.</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -48,6 +50,6 @@ export default function HomePage(): ReactElement {
           <p className="mt-2 text-slate-600">View hymns, prayers, business items, and speaker topics in one place.</p>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

@@ -16,7 +16,7 @@ function MeetingHeader({ meeting }: { meeting: SacramentMeeting }): ReactElement
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">{meeting.meetingType}</p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-900">{formattedDate}</h1>
+          <h2 className="mt-2 text-3xl font-bold text-slate-900">{formattedDate}</h2>
         </div>
         <span className="rounded-full bg-sky-50 px-3 py-1 text-sm font-medium text-sky-800">Meeting #{meeting.id}</span>
       </div>

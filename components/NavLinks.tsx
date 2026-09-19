@@ -16,7 +16,10 @@ export function NavLinks(): ReactElement {
   return (
     <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-2">
       {items.map((item) => {
-        const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+        const isActive =
+          item.href === '/'
+            ? pathname === '/'
+            : pathname === item.href || (item.href !== '/meetings' && pathname.startsWith(`${item.href}/`));
 
         return (
           <Link
