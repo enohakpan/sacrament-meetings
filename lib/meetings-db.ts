@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 
-import type { Hymn, MeetingType, SacramentMeeting, SpeakerItem, WardBusinessItem } from './types';
+import type { Hymn, MeetingMutationInput, MeetingType, SacramentMeeting, SpeakerItem, WardBusinessItem } from './types';
 
 export const ITEMS_PER_PAGE = 5;
 
@@ -168,23 +168,82 @@ export async function getMeetingById(id: number): Promise<SacramentMeeting | nul
   return mapMeeting(rows[0] as Record<string, unknown>);
 }
 
-export async function addMeeting(meeting: SacramentMeeting): Promise<SacramentMeeting[]> {
-  void meeting;
-  throw new Error('addMeeting will be implemented in Week 04.');
+export async function addMeeting(meeting: MeetingMutationInput): Promise<SacramentMeeting> {
+  const sql = getSql();
+  const rows = await sql`
+    INSERT INTO meetings (
+      date,
+      meeting_type,
+      presiding,
+      conducting,
+      announcements,
+      opening_hymn,
+      opening_prayer,
+      ward_business,
+      stake_business,
+      sacrament_hymn,
+      speakers,
+      closing_hymn,
+      closing_prayer
+    ) VALUES (
+      ${meeting.date},
+      ${meeting.meetingType},
+      ${meeting.presiding},
+      ${meeting.conducting},
+      ${meeting.announcements},
+      ${JSON.stringify(meeting.openingHymn)}::jsonb,
+      ${meeting.openingPrayer},
+      ${JSON.stringify(meeting.wardBusiness)}::jsonb,
+      ${meeting.stakeBusiness},
+      ${JSON.stringify(meeting.sacramentHymn)}::jsonb,
+      ${JSON.stringify(meeting.speakers)}::jsonb,
+      ${JSON.stringify(meeting.closingHymn)}::jsonb,
+      ${meeting.closingPrayer}
+    )
+    RETURNING *, to_char(date, 'YYYY-MM-DD') AS iso_date
+  `;
+
+  return mapMeeting(rows[0] as Record<string, unknown>);
 }
 
-export async function updateMeeting(
-  id: number,
-  updates: Partial<SacramentMeeting>,
-): Promise<SacramentMeeting | null> {
-  void id;
-  void updates;
-  throw new Error('updateMeeting will be implemented in Week 04.');
+export async function updateMeeting(id: number, updates: MeetingMutationInput): Promise<SacramentMeeting | null> {
+  const sql = getSql();
+  const rows = await sql`
+    UPDATE meetings
+    SET
+      date = ${updates.date},
+      meeting_type = ${updates.meetingType},
+      presiding = ${updates.presiding},
+      conducting = ${updates.conducting},
+      announcements = ${updates.announcements},
+      opening_hymn = ${JSON.stringify(updates.openingHymn)}::jsonb,
+      opening_prayer = ${updates.openingPrayer},
+      ward_business = ${JSON.stringify(updates.wardBusiness)}::jsonb,
+      stake_business = ${updates.stakeBusiness},
+      sacrament_hymn = ${JSON.stringify(updates.sacramentHymn)}::jsonb,
+      speakers = ${JSON.stringify(updates.speakers)}::jsonb,
+      closing_hymn = ${JSON.stringify(updates.closingHymn)}::jsonb,
+      closing_prayer = ${updates.closingPrayer}
+    WHERE id = ${id}
+    RETURNING *, to_char(date, 'YYYY-MM-DD') AS iso_date
+  `;
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return mapMeeting(rows[0] as Record<string, unknown>);
 }
 
 export async function deleteMeeting(id: number): Promise<boolean> {
-  void id;
-  throw new Error('deleteMeeting will be implemented in Week 04.');
+  const sql = getSql();
+  const rows = await sql`
+    DELETE FROM meetings
+    WHERE id = ${id}
+    RETURNING id
+  `;
+
+  return rows.length > 0;
 }
 
 export async function getCurrentSundayMeeting(): Promise<SacramentMeeting | null> {

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 
+import { deleteMeeting } from '@/lib/actions';
 import type { SacramentMeeting } from '@/lib/types';
 
 function MeetingMetaBadge({ type, id }: { type: SacramentMeeting['meetingType']; id: number }): ReactElement {
@@ -42,12 +43,29 @@ export function MeetingCard({ meeting }: { meeting: SacramentMeeting }): ReactEl
         <MeetingHymnSummary label="Sacrament hymn" hymn={meeting.sacramentHymn} />
       </div>
 
-      <Link
-        href={`/meetings/${meeting.id}`}
-        className="mt-6 inline-flex w-fit items-center rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800"
-      >
-        View agenda
-      </Link>
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        <Link
+          href={`/meetings/${meeting.id}`}
+          className="inline-flex w-fit items-center rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800"
+        >
+          View agenda
+        </Link>
+        <Link
+          href={`/meetings/${meeting.id}/edit`}
+          className="inline-flex w-fit items-center rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+        >
+          Edit
+        </Link>
+        <form action={deleteMeeting}>
+          <input type="hidden" name="id" value={meeting.id} />
+          <button
+            type="submit"
+            className="inline-flex w-fit items-center rounded-full border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50"
+          >
+            Delete
+          </button>
+        </form>
+      </div>
     </article>
   );
 }
