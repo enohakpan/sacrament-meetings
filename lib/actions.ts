@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
-import type { MeetingActionState } from '@/lib/action-state';
+import type { MeetingActionState, MeetingFormFieldValues } from '@/lib/action-state';
 import {
   addMeeting,
   deleteMeeting as deleteMeetingRecord,
@@ -109,26 +109,36 @@ function toMeetingInput(values: MeetingFormValues): MeetingMutationInput {
   };
 }
 
-function validateForm(formData: FormData):
-  | { success: true; data: MeetingFormValues }
-  | { success: false; message: string; errors: MeetingFormFieldErrors } {
-  const parsed = MeetingFormSchema.safeParse({
-    date: formData.get('date'),
-    meetingType: formData.get('meetingType'),
-    presiding: formData.get('presiding'),
-    conducting: formData.get('conducting'),
-    openingPrayer: formData.get('openingPrayer'),
-    closingPrayer: formData.get('closingPrayer'),
-    openingHymnNumber: formData.get('openingHymnNumber'),
-    openingHymnTitle: formData.get('openingHymnTitle'),
-    sacramentHymnNumber: formData.get('sacramentHymnNumber'),
-    sacramentHymnTitle: formData.get('sacramentHymnTitle'),
-    closingHymnNumber: formData.get('closingHymnNumber'),
-    closingHymnTitle: formData.get('closingHymnTitle'),
-    announcements: formData.get('announcements') ?? '',
-    wardBusiness: formData.get('wardBusiness') ?? '',
-    speakers: formData.get('speakers') ?? '',
+function readFormValues(formData: FormData): MeetingFormFieldValues {
+  const text = (name: string): string => String(formData.get(name) ?? '');
+
+  return {
+    date: text('date'),
+    meetingType: text('meetingType') || 'regular',
+    presiding: text('presiding'),
+    conducting: text('conducting'),
+    openingPrayer: text('openingPrayer'),
+    closingPrayer: text('closingPrayer'),
+    openingHymnNumber: text('openingHymnNumber'),
+    openingHymnTitle: text('openingHymnTitle'),
+    sacramentHymnNumber: text('sacramentHymnNumber'),
+    sacramentHymnTitle: text('sacramentHymnTitle'),
+    closingHymnNumber: text('closingHymnNumber'),
+    closingHymnTitle: text('closingHymnTitle'),
+    announcements: text('announcements'),
+    wardBusiness: text('wardBusiness'),
+    speakers: text('speakers'),
     stakeBusiness: formData.get('stakeBusiness') === 'on',
+  };
+}
+
+function validateForm(formData: FormData):
+  | { success: true; data: MeetingFormValues; values: MeetingFormFieldValues }
+  | { success: false; message: string; errors: MeetingFormFieldErrors; values: MeetingFormFieldValues } {
+  const values = readFormValues(formData);
+  const parsed = MeetingFormSchema.safeParse({
+    ...values,
+    stakeBusiness: values.stakeBusiness,
   });
 
   if (!parsed.success) {
@@ -136,12 +146,14 @@ function validateForm(formData: FormData):
       success: false,
       message: 'Please correct the highlighted fields and try again.',
       errors: parsed.error.flatten().fieldErrors,
+      values,
     };
   }
 
   return {
     success: true,
     data: parsed.data,
+    values,
   };
 }
 
@@ -155,6 +167,7 @@ export async function createMeeting(
     return {
       message: validated.message,
       errors: validated.errors,
+      values: validated.values,
     };
   }
 
@@ -170,6 +183,7 @@ export async function createMeeting(
       return {
         message: 'A meeting already exists on this date.',
         errors: { date: ['Choose a different meeting date.'] },
+        values: validated.values,
       };
     }
 
@@ -190,6 +204,7 @@ export async function updateMeeting(
     return {
       message: validated.message,
       errors: validated.errors,
+      values: validated.values,
     };
   }
 
@@ -210,6 +225,7 @@ export async function updateMeeting(
       return {
         message: 'A meeting already exists on this date.',
         errors: { date: ['Choose a different meeting date.'] },
+        values: validated.values,
       };
     }
 

@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState } from 'react';
-import type { ReactElement } from 'react';
+import { useActionState, useEffect, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
-import type { MeetingActionState } from '@/lib/action-state';
+import type { MeetingActionState, MeetingFormFieldValues } from '@/lib/action-state';
 import type { MeetingType } from '@/lib/types';
 
 const meetingTypes: MeetingType[] = ['testimony', 'regular', 'stake', 'general', 'special'];
@@ -35,29 +35,56 @@ export interface MeetingFormDefaults {
   stakeBusiness: boolean;
 }
 
-const emptyDefaults: MeetingFormDefaults = {
-  date: '',
-  meetingType: 'regular',
-  presiding: '',
-  conducting: '',
-  openingPrayer: '',
-  closingPrayer: '',
-  openingHymnNumber: 0,
-  openingHymnTitle: '',
-  sacramentHymnNumber: 0,
-  sacramentHymnTitle: '',
-  closingHymnNumber: 0,
-  closingHymnTitle: '',
-  announcements: '',
-  wardBusiness: '',
-  speakers: '',
-  stakeBusiness: false,
-};
-
 interface MeetingFormProps {
   action: MeetingFormAction;
   submitLabel: string;
   defaults?: Partial<MeetingFormDefaults>;
+}
+
+function toFieldValues(
+  defaults?: Partial<MeetingFormDefaults>,
+  submitted?: MeetingFormFieldValues,
+): MeetingFormFieldValues {
+  return {
+    date: submitted?.date ?? defaults?.date ?? '',
+    meetingType: submitted?.meetingType ?? defaults?.meetingType ?? 'regular',
+    presiding: submitted?.presiding ?? defaults?.presiding ?? '',
+    conducting: submitted?.conducting ?? defaults?.conducting ?? '',
+    openingPrayer: submitted?.openingPrayer ?? defaults?.openingPrayer ?? '',
+    closingPrayer: submitted?.closingPrayer ?? defaults?.closingPrayer ?? '',
+    openingHymnNumber: submitted?.openingHymnNumber ?? (defaults?.openingHymnNumber ? String(defaults.openingHymnNumber) : ''),
+    openingHymnTitle: submitted?.openingHymnTitle ?? defaults?.openingHymnTitle ?? '',
+    sacramentHymnNumber:
+      submitted?.sacramentHymnNumber ?? (defaults?.sacramentHymnNumber ? String(defaults.sacramentHymnNumber) : ''),
+    sacramentHymnTitle: submitted?.sacramentHymnTitle ?? defaults?.sacramentHymnTitle ?? '',
+    closingHymnNumber: submitted?.closingHymnNumber ?? (defaults?.closingHymnNumber ? String(defaults.closingHymnNumber) : ''),
+    closingHymnTitle: submitted?.closingHymnTitle ?? defaults?.closingHymnTitle ?? '',
+    announcements: submitted?.announcements ?? defaults?.announcements ?? '',
+    wardBusiness: submitted?.wardBusiness ?? defaults?.wardBusiness ?? '',
+    speakers: submitted?.speakers ?? defaults?.speakers ?? '',
+    stakeBusiness: submitted?.stakeBusiness ?? defaults?.stakeBusiness ?? false,
+  };
+}
+
+function FieldLabel({
+  htmlFor,
+  required,
+  children,
+}: {
+  htmlFor: string;
+  required?: boolean;
+  children: ReactNode;
+}): ReactElement {
+  return (
+    <label htmlFor={htmlFor} className="block text-sm font-medium text-slate-800">
+      {children}
+      {required ? (
+        <span className="ml-0.5 text-rose-700" aria-hidden="true">
+          *
+        </span>
+      ) : null}
+    </label>
+  );
 }
 
 function ErrorText({ id, errors }: { id: string; errors?: string[] }): ReactElement {
@@ -78,20 +105,36 @@ function fieldClasses(hasError: boolean): string {
 
 export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps): ReactElement {
   const [state, formAction, isPending] = useActionState(action, initialState);
-  const formDefaults = { ...emptyDefaults, ...defaults };
+  const [values, setValues] = useState<MeetingFormFieldValues>(() => toFieldValues(defaults, state.values));
+
+  useEffect(() => {
+    if (state.values) {
+      setValues(toFieldValues(defaults, state.values));
+    }
+  }, [defaults, state.values]);
+
+  const updateField = (name: keyof Omit<MeetingFormFieldValues, 'stakeBusiness'>, value: string) => {
+    setValues((current) => ({ ...current, [name]: value }));
+  };
 
   return (
     <form action={formAction} className="space-y-5">
+      <p className="text-sm text-slate-600">
+        Fields marked with <span className="font-semibold text-rose-700">*</span> are required.
+      </p>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="date" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="date" required>
             Date
-          </label>
+          </FieldLabel>
           <input
             id="date"
             name="date"
             type="date"
-            defaultValue={formDefaults.date}
+            value={values.date}
+            onChange={(event) => updateField('date', event.target.value)}
+            aria-required="true"
             aria-describedby="date-error"
             aria-invalid={Boolean(state.errors.date)}
             className={fieldClasses(Boolean(state.errors.date))}
@@ -100,13 +143,15 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
         </div>
 
         <div>
-          <label htmlFor="meetingType" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="meetingType" required>
             Meeting type
-          </label>
+          </FieldLabel>
           <select
             id="meetingType"
             name="meetingType"
-            defaultValue={formDefaults.meetingType}
+            value={values.meetingType}
+            onChange={(event) => updateField('meetingType', event.target.value)}
+            aria-required="true"
             aria-describedby="meetingType-error"
             aria-invalid={Boolean(state.errors.meetingType)}
             className={fieldClasses(Boolean(state.errors.meetingType))}
@@ -123,13 +168,15 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="presiding" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="presiding" required>
             Presiding
-          </label>
+          </FieldLabel>
           <input
             id="presiding"
             name="presiding"
-            defaultValue={formDefaults.presiding}
+            value={values.presiding}
+            onChange={(event) => updateField('presiding', event.target.value)}
+            aria-required="true"
             aria-describedby="presiding-error"
             aria-invalid={Boolean(state.errors.presiding)}
             className={fieldClasses(Boolean(state.errors.presiding))}
@@ -138,13 +185,15 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
         </div>
 
         <div>
-          <label htmlFor="conducting" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="conducting" required>
             Conducting
-          </label>
+          </FieldLabel>
           <input
             id="conducting"
             name="conducting"
-            defaultValue={formDefaults.conducting}
+            value={values.conducting}
+            onChange={(event) => updateField('conducting', event.target.value)}
+            aria-required="true"
             aria-describedby="conducting-error"
             aria-invalid={Boolean(state.errors.conducting)}
             className={fieldClasses(Boolean(state.errors.conducting))}
@@ -155,14 +204,16 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
-          <label htmlFor="openingHymnNumber" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="openingHymnNumber" required>
             Opening hymn number
-          </label>
+          </FieldLabel>
           <input
             id="openingHymnNumber"
             name="openingHymnNumber"
             type="number"
-            defaultValue={formDefaults.openingHymnNumber || ''}
+            value={values.openingHymnNumber}
+            onChange={(event) => updateField('openingHymnNumber', event.target.value)}
+            aria-required="true"
             aria-describedby="openingHymnNumber-error"
             aria-invalid={Boolean(state.errors.openingHymnNumber)}
             className={fieldClasses(Boolean(state.errors.openingHymnNumber))}
@@ -171,14 +222,16 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
         </div>
 
         <div>
-          <label htmlFor="sacramentHymnNumber" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="sacramentHymnNumber" required>
             Sacrament hymn number
-          </label>
+          </FieldLabel>
           <input
             id="sacramentHymnNumber"
             name="sacramentHymnNumber"
             type="number"
-            defaultValue={formDefaults.sacramentHymnNumber || ''}
+            value={values.sacramentHymnNumber}
+            onChange={(event) => updateField('sacramentHymnNumber', event.target.value)}
+            aria-required="true"
             aria-describedby="sacramentHymnNumber-error"
             aria-invalid={Boolean(state.errors.sacramentHymnNumber)}
             className={fieldClasses(Boolean(state.errors.sacramentHymnNumber))}
@@ -187,14 +240,16 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
         </div>
 
         <div>
-          <label htmlFor="closingHymnNumber" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="closingHymnNumber" required>
             Closing hymn number
-          </label>
+          </FieldLabel>
           <input
             id="closingHymnNumber"
             name="closingHymnNumber"
             type="number"
-            defaultValue={formDefaults.closingHymnNumber || ''}
+            value={values.closingHymnNumber}
+            onChange={(event) => updateField('closingHymnNumber', event.target.value)}
+            aria-required="true"
             aria-describedby="closingHymnNumber-error"
             aria-invalid={Boolean(state.errors.closingHymnNumber)}
             className={fieldClasses(Boolean(state.errors.closingHymnNumber))}
@@ -205,13 +260,15 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
-          <label htmlFor="openingHymnTitle" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="openingHymnTitle" required>
             Opening hymn title
-          </label>
+          </FieldLabel>
           <input
             id="openingHymnTitle"
             name="openingHymnTitle"
-            defaultValue={formDefaults.openingHymnTitle}
+            value={values.openingHymnTitle}
+            onChange={(event) => updateField('openingHymnTitle', event.target.value)}
+            aria-required="true"
             aria-describedby="openingHymnTitle-error"
             aria-invalid={Boolean(state.errors.openingHymnTitle)}
             className={fieldClasses(Boolean(state.errors.openingHymnTitle))}
@@ -220,13 +277,15 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
         </div>
 
         <div>
-          <label htmlFor="sacramentHymnTitle" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="sacramentHymnTitle" required>
             Sacrament hymn title
-          </label>
+          </FieldLabel>
           <input
             id="sacramentHymnTitle"
             name="sacramentHymnTitle"
-            defaultValue={formDefaults.sacramentHymnTitle}
+            value={values.sacramentHymnTitle}
+            onChange={(event) => updateField('sacramentHymnTitle', event.target.value)}
+            aria-required="true"
             aria-describedby="sacramentHymnTitle-error"
             aria-invalid={Boolean(state.errors.sacramentHymnTitle)}
             className={fieldClasses(Boolean(state.errors.sacramentHymnTitle))}
@@ -235,13 +294,15 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
         </div>
 
         <div>
-          <label htmlFor="closingHymnTitle" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="closingHymnTitle" required>
             Closing hymn title
-          </label>
+          </FieldLabel>
           <input
             id="closingHymnTitle"
             name="closingHymnTitle"
-            defaultValue={formDefaults.closingHymnTitle}
+            value={values.closingHymnTitle}
+            onChange={(event) => updateField('closingHymnTitle', event.target.value)}
+            aria-required="true"
             aria-describedby="closingHymnTitle-error"
             aria-invalid={Boolean(state.errors.closingHymnTitle)}
             className={fieldClasses(Boolean(state.errors.closingHymnTitle))}
@@ -252,13 +313,15 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="openingPrayer" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="openingPrayer" required>
             Opening prayer
-          </label>
+          </FieldLabel>
           <input
             id="openingPrayer"
             name="openingPrayer"
-            defaultValue={formDefaults.openingPrayer}
+            value={values.openingPrayer}
+            onChange={(event) => updateField('openingPrayer', event.target.value)}
+            aria-required="true"
             aria-describedby="openingPrayer-error"
             aria-invalid={Boolean(state.errors.openingPrayer)}
             className={fieldClasses(Boolean(state.errors.openingPrayer))}
@@ -267,13 +330,15 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
         </div>
 
         <div>
-          <label htmlFor="closingPrayer" className="block text-sm font-medium text-slate-800">
+          <FieldLabel htmlFor="closingPrayer" required>
             Closing prayer
-          </label>
+          </FieldLabel>
           <input
             id="closingPrayer"
             name="closingPrayer"
-            defaultValue={formDefaults.closingPrayer}
+            value={values.closingPrayer}
+            onChange={(event) => updateField('closingPrayer', event.target.value)}
+            aria-required="true"
             aria-describedby="closingPrayer-error"
             aria-invalid={Boolean(state.errors.closingPrayer)}
             className={fieldClasses(Boolean(state.errors.closingPrayer))}
@@ -283,13 +348,12 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
       </div>
 
       <div>
-        <label htmlFor="announcements" className="block text-sm font-medium text-slate-800">
-          Announcements (one per line)
-        </label>
+        <FieldLabel htmlFor="announcements">Announcements (one per line)</FieldLabel>
         <textarea
           id="announcements"
           name="announcements"
-          defaultValue={formDefaults.announcements}
+          value={values.announcements}
+          onChange={(event) => updateField('announcements', event.target.value)}
           rows={3}
           aria-describedby="announcements-error"
           aria-invalid={Boolean(state.errors.announcements)}
@@ -299,13 +363,12 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
       </div>
 
       <div>
-        <label htmlFor="wardBusiness" className="block text-sm font-medium text-slate-800">
-          Ward business (one per line)
-        </label>
+        <FieldLabel htmlFor="wardBusiness">Ward business (one per line)</FieldLabel>
         <textarea
           id="wardBusiness"
           name="wardBusiness"
-          defaultValue={formDefaults.wardBusiness}
+          value={values.wardBusiness}
+          onChange={(event) => updateField('wardBusiness', event.target.value)}
           rows={3}
           aria-describedby="wardBusiness-error"
           aria-invalid={Boolean(state.errors.wardBusiness)}
@@ -315,13 +378,12 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
       </div>
 
       <div>
-        <label htmlFor="speakers" className="block text-sm font-medium text-slate-800">
-          Speakers (name|topic|type, one per line)
-        </label>
+        <FieldLabel htmlFor="speakers">Speakers (name|topic|type, one per line)</FieldLabel>
         <textarea
           id="speakers"
           name="speakers"
-          defaultValue={formDefaults.speakers}
+          value={values.speakers}
+          onChange={(event) => updateField('speakers', event.target.value)}
           rows={4}
           aria-describedby="speakers-help speakers-error"
           aria-invalid={Boolean(state.errors.speakers)}
@@ -339,7 +401,8 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
             id="stakeBusiness"
             name="stakeBusiness"
             type="checkbox"
-            defaultChecked={formDefaults.stakeBusiness}
+            checked={values.stakeBusiness}
+            onChange={(event) => setValues((current) => ({ ...current, stakeBusiness: event.target.checked }))}
             aria-describedby="stakeBusiness-error"
             className="h-4 w-4 rounded border-slate-300 text-sky-700 focus-visible:ring-sky-600"
           />
