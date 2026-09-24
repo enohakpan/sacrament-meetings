@@ -71,6 +71,17 @@ function parseSpeakers(value: string | undefined): SpeakerItem[] {
     .filter((speaker): speaker is SpeakerItem => speaker !== null);
 }
 
+function isUniqueDateError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const maybeError = error as { code?: string; message?: string };
+  const message = maybeError.message?.toLowerCase() ?? '';
+
+  return maybeError.code === '23505' || message.includes('duplicate key') || message.includes('unique constraint');
+}
+
 function toMeetingInput(values: MeetingFormValues): MeetingMutationInput {
   return {
     date: values.date,
@@ -148,10 +159,20 @@ export async function createMeeting(
   }
 
   try {
-    await addMeeting(toMeetingInput(validated.data));
-    revalidatePath('/meetings');
+    const createdMeeting = await addMeeting(toMeetingInput(validated.data));
+    revalidatePath('/meetings', 'layout');
+    revalidatePath('/');
+    revalidatePath(`/meetings/${createdMeeting.id}`);
   } catch (error) {
     console.error('Failed to create meeting:', error);
+
+    if (isUniqueDateError(error)) {
+      return {
+        message: 'A meeting already exists on this date.',
+        errors: { date: ['Choose a different meeting date.'] },
+      };
+    }
+
     throw new Error('Unable to create the meeting right now. Please try again.');
   }
 
@@ -179,9 +200,19 @@ export async function updateMeeting(
       throw new Error('Meeting not found.');
     }
 
-    revalidatePath('/meetings');
+    revalidatePath('/meetings', 'layout');
+    revalidatePath('/');
+    revalidatePath(`/meetings/${id}`);
   } catch (error) {
     console.error(`Failed to update meeting #${id}:`, error);
+
+    if (isUniqueDateError(error)) {
+      return {
+        message: 'A meeting already exists on this date.',
+        errors: { date: ['Choose a different meeting date.'] },
+      };
+    }
+
     throw new Error('Unable to update the meeting right now. Please try again.');
   }
 
@@ -202,7 +233,9 @@ export async function deleteMeeting(formData: FormData): Promise<void> {
       throw new Error('Meeting not found.');
     }
 
-    revalidatePath('/meetings');
+    revalidatePath('/meetings', 'layout');
+    revalidatePath('/');
+    revalidatePath(`/meetings/${parsed.data}`);
   } catch (error) {
     console.error(`Failed to delete meeting #${parsed.data}:`, error);
     throw new Error('Unable to delete the meeting right now. Please try again.');

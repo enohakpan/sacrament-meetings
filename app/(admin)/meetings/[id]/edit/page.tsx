@@ -49,6 +49,7 @@ export default async function EditMeetingPage({
       <p className="mt-3 text-slate-600">Update meeting details and save changes.</p>
       <div className="mt-6">
         <MeetingForm
+          key={meeting.id}
           action={updateMeetingWithId}
           submitLabel="Save changes"
           defaults={toFormDefaults(meeting)}

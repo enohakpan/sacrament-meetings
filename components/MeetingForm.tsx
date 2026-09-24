@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState } from 'react';
 import type { ReactElement } from 'react';
 
@@ -355,7 +356,13 @@ export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps)
         >
           {isPending ? 'Saving...' : submitLabel}
         </button>
-        <p aria-live="polite" className="text-sm text-rose-700">
+        <Link
+          href="/meetings"
+          className="inline-flex rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+        >
+          Cancel
+        </Link>
+        <p role="status" aria-live="polite" className="text-sm text-rose-700">
           {state.message}
         </p>
       </div>

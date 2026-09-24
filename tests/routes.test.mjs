@@ -83,7 +83,23 @@ test('current meeting route resolves to a valid meetings page', async () => {
 
 test('invalid meeting route renders the not-found response', async () => {
   const response = await fetch(`${baseUrl}/meetings/999`);
-  assert.match(await response.text(), /404: This page could not be found/);
+  assert.match(await response.text(), /Meeting not found/);
+});
+
+test('create and edit routes render meeting forms', async (t) => {
+  const routes = [
+    ['/meetings/new', 'Create meeting'],
+    ['/meetings/1/edit', 'Edit meeting #1'],
+    ['/meetings/999/edit', 'Meeting not found'],
+  ];
+
+  for (const [route, expectedText] of routes) {
+    await t.test(route, async () => {
+      const response = await fetch(`${baseUrl}${route}`);
+      assert.equal(response.status, 200);
+      assert.match(await response.text(), new RegExp(expectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    });
+  }
 });
 
 test('meeting API routes return data', async () => {

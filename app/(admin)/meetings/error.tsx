@@ -7,13 +7,17 @@ import type { ReactElement } from 'react';
 export default function MeetingsAdminErrorPage({
   error,
   reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  reset?: () => void;
+  retry?: () => void;
 }): ReactElement {
   useEffect(() => {
     console.error('Admin meetings route error:', error);
   }, [error]);
+
+  const tryAgain = retry ?? reset;
 
   return (
     <section className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-rose-900">
@@ -22,7 +26,7 @@ export default function MeetingsAdminErrorPage({
       <div className="mt-6 flex flex-wrap gap-3">
         <button
           type="button"
-          onClick={() => reset()}
+          onClick={() => tryAgain?.()}
           className="rounded-full bg-rose-700 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-800"
         >
           Try Again

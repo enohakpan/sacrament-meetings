@@ -60,6 +60,7 @@ export function MeetingCard({ meeting }: { meeting: SacramentMeeting }): ReactEl
           <input type="hidden" name="id" value={meeting.id} />
           <button
             type="submit"
+            aria-label={`Delete meeting on ${formattedDate}`}
             className="inline-flex w-fit items-center rounded-full border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50"
           >
             Delete
