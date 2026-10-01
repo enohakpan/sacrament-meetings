@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
 import type { ReactElement } from 'react';
 
 import { MeetingForm } from '@/components/MeetingForm';
 import { createMeeting } from '@/lib/actions';
+
+export const metadata: Metadata = {
+  title: 'Create meeting',
+  description: 'Create a sacrament meeting agenda. This page is limited to the signed-in ward owner.',
+};
 
 export default function CreateMeetingPage(): ReactElement {
   return (

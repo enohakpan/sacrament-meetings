@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 
 import type { MeetingActionState, MeetingFormFieldValues } from '@/lib/action-state';
@@ -106,12 +106,12 @@ function fieldClasses(hasError: boolean): string {
 export function MeetingForm({ action, submitLabel, defaults }: MeetingFormProps): ReactElement {
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [values, setValues] = useState<MeetingFormFieldValues>(() => toFieldValues(defaults, state.values));
+  const [appliedServerValues, setAppliedServerValues] = useState(state.values);
 
-  useEffect(() => {
-    if (state.values) {
-      setValues(toFieldValues(defaults, state.values));
-    }
-  }, [defaults, state.values]);
+  if (state.values && state.values !== appliedServerValues) {
+    setAppliedServerValues(state.values);
+    setValues(toFieldValues(defaults, state.values));
+  }
 
   const updateField = (name: keyof Omit<MeetingFormFieldValues, 'stakeBusiness'>, value: string) => {
     setValues((current) => ({ ...current, [name]: value }));

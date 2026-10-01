@@ -17,9 +17,21 @@ const playfair = Playfair_Display({
   subsets: ['latin'],
 });
 
+const siteDescription = 'Ward meeting schedule, hymn list, and sacrament meeting agenda for GRA Ward, Wuse Stake.';
+
 export const metadata: Metadata = {
-  title: 'GRA Ward',
-  description: 'Ward meeting schedule, hymn list, and sacrament meeting agenda.',
+  metadataBase: new URL(process.env.AUTH_URL ?? 'http://localhost:3000'),
+  title: {
+    default: 'GRA Ward | Sacrament Meetings',
+    template: '%s | GRA Ward',
+  },
+  description: siteDescription,
+  openGraph: {
+    title: 'GRA Ward | Sacrament Meetings',
+    description: siteDescription,
+    siteName: 'GRA Ward',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }): ReactElement {

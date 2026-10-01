@@ -1,10 +1,13 @@
 'use server';
 
+import { AuthError } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { signIn } from '@/auth';
 import type { MeetingActionState, MeetingFormFieldValues } from '@/lib/action-state';
+import { requireOwnerSession } from '@/lib/session';
 import {
   addMeeting,
   deleteMeeting as deleteMeetingRecord,
@@ -161,6 +164,7 @@ export async function createMeeting(
   _prevState: MeetingActionState,
   formData: FormData,
 ): Promise<MeetingActionState> {
+  await requireOwnerSession();
   const validated = validateForm(formData);
 
   if (!validated.success) {
@@ -198,6 +202,7 @@ export async function updateMeeting(
   _prevState: MeetingActionState,
   formData: FormData,
 ): Promise<MeetingActionState> {
+  await requireOwnerSession();
   const validated = validateForm(formData);
 
   if (!validated.success) {
@@ -236,6 +241,7 @@ export async function updateMeeting(
 }
 
 export async function deleteMeeting(formData: FormData): Promise<void> {
+  await requireOwnerSession();
   const parsed = z.coerce.number().int().positive().safeParse(formData.get('id'));
 
   if (!parsed.success) {
@@ -258,4 +264,22 @@ export async function deleteMeeting(formData: FormData): Promise<void> {
   }
 
   redirect('/meetings');
+}
+
+export async function authenticate(prevState: string | undefined, formData: FormData) {
+  void prevState;
+
+  try {
+    await signIn('credentials', formData);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      if (error.type === 'CredentialsSignin') {
+        return 'Invalid email or password.';
+      }
+
+      return 'Something went wrong.';
+    }
+
+    throw error;
+  }
 }

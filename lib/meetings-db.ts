@@ -1,4 +1,8 @@
+import { cache } from 'react';
+
 import { neon } from '@neondatabase/serverless';
+
+import { requireOwnerSession } from '@/lib/session';
 
 import type { Hymn, MeetingMutationInput, MeetingType, SacramentMeeting, SpeakerItem, WardBusinessItem } from './types';
 
@@ -152,7 +156,7 @@ export async function getMeetings(
   return rows.map((row) => mapMeeting(row as Record<string, unknown>));
 }
 
-export async function getMeetingById(id: number): Promise<SacramentMeeting | null> {
+export const getMeetingById = cache(async (id: number): Promise<SacramentMeeting | null> => {
   const sql = getSql();
   const rows = await sql`
     SELECT *, to_char(date, 'YYYY-MM-DD') AS iso_date
@@ -166,9 +170,10 @@ export async function getMeetingById(id: number): Promise<SacramentMeeting | nul
   }
 
   return mapMeeting(rows[0] as Record<string, unknown>);
-}
+});
 
 export async function addMeeting(meeting: MeetingMutationInput): Promise<SacramentMeeting> {
+  await requireOwnerSession();
   const sql = getSql();
   const rows = await sql`
     INSERT INTO meetings (
@@ -207,6 +212,7 @@ export async function addMeeting(meeting: MeetingMutationInput): Promise<Sacrame
 }
 
 export async function updateMeeting(id: number, updates: MeetingMutationInput): Promise<SacramentMeeting | null> {
+  await requireOwnerSession();
   const sql = getSql();
   const rows = await sql`
     UPDATE meetings
@@ -236,6 +242,7 @@ export async function updateMeeting(id: number, updates: MeetingMutationInput): 
 }
 
 export async function deleteMeeting(id: number): Promise<boolean> {
+  await requireOwnerSession();
   const sql = getSql();
   const rows = await sql`
     DELETE FROM meetings

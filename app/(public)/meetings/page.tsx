@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import type { ReactElement } from 'react';
 
@@ -5,6 +6,11 @@ import { MeetingCard } from '@/components/MeetingCard';
 import { MeetingSearch } from '@/components/MeetingSearch';
 import { Pagination } from '@/components/Pagination';
 import { getMeetings } from '@/lib/meetings-db';
+
+export const metadata: Metadata = {
+  title: 'Meetings',
+  description: 'Browse sacrament meeting agendas for GRA Ward, including hymns, speakers, and ward business.',
+};
 
 function SearchFallback(): ReactElement {
   return (

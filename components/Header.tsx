@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 
-export function Header(): ReactElement {
+import { auth } from '@/auth';
+import { SignOutButton } from '@/components/sign-out-button';
+
+export async function Header(): Promise<ReactElement> {
+  const session = await auth();
   const currentDate = new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     month: 'long',
@@ -19,8 +23,25 @@ export function Header(): ReactElement {
             GRA Ward, Wuse Stake
           </Link>
         </div>
-        <div className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-slate-700">
-          {currentDate}
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          {session?.user ? (
+            <>
+              <p className="text-sm text-slate-600">
+                Signed in as <span className="font-medium text-slate-900">{session.user.name ?? session.user.email}</span>
+              </p>
+              <SignOutButton />
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800"
+            >
+              Sign in
+            </Link>
+          )}
+          <div className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-slate-700">
+            {currentDate}
+          </div>
         </div>
       </div>
     </header>

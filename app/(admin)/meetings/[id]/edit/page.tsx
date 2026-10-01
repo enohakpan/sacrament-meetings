@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { ReactElement } from 'react';
 
@@ -6,6 +7,11 @@ import { MeetingForm } from '@/components/MeetingForm';
 import { updateMeeting } from '@/lib/actions';
 import { getMeetingById } from '@/lib/meetings-db';
 import type { SacramentMeeting } from '@/lib/types';
+
+export const metadata: Metadata = {
+  title: 'Edit meeting',
+  description: 'Edit a sacrament meeting agenda. This page is limited to the signed-in ward owner.',
+};
 
 function toFormDefaults(meeting: SacramentMeeting): MeetingFormDefaults {
   return {
